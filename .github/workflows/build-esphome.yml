@@ -1,0 +1,65 @@
+# 工作流名称
+name: build esphome s7
+
+# 触发条件
+on:
+  push:
+    branches:
+      - main        # 推送即编译
+  workflow_dispatch: # 手动触发
+
+jobs:
+  compile-esphome:
+    runs-on: ubuntu-latest
+    steps:
+      # 步骤1：拉取仓库代码
+      - name: 拉取仓库代码
+        uses: actions/checkout@v6
+
+      # 步骤2：配置 Python 环境
+      - name: 配置 Python 环境
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      # 步骤3：安装 ESPHome
+      - name: 安装 ESPHome
+        run: |
+          python -m pip install --upgrade pip
+          pip install esphome
+
+      # 关键步骤：动态生成 secrets.yaml（必须放在 esphome/ 目录，和 phicomm-s7.yaml 同级）
+      # 需要在仓库 Settings -> Secrets and variables -> Actions 里添加：
+      #   WIFI_SSID / WIFI_PASSWORD
+      - name: Generate secrets.yaml
+        run: |
+          cat > esphome/secrets.yaml <<EOF
+          wifi_ssid: "${{ secrets.WIFI_SSID }}"
+          wifi_password: "${{ secrets.WIFI_PASSWORD }}"
+          EOF
+
+      # 步骤4：编译固件（external_components 用相对路径，必须让 esphome 找到 esphome/components）
+      - name: 编译固件
+        run: |
+          esphome config esphome/phicomm-s7.yaml   # 先校验，报错快速失败
+          esphome compile esphome/phicomm-s7.yaml
+
+      # 步骤5：收集编译产物（兼容新旧版本构建目录，ESP8266 产物名可能是 firmware.bin）
+      - name: 收集固件文件
+        run: |
+          mkdir -p artifacts
+          find . -name "firmware*.bin" -not -path "./.git/*" -exec cp {} artifacts/ \;
+          cp esphome/phicomm-s7.yaml artifacts/
+          ls -la artifacts/
+          if [ ! -e artifacts/firmware.bin ] && [ ! -e artifacts/firmware.factory.bin ]; then
+            echo "::error::没有找到固件 bin，编译可能失败了"
+            exit 1
+          fi
+
+      # 步骤6：上传固件
+      - name: 上传固件到 Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: phicomm-s7-${{ github.sha }}
+          path: artifacts/
+          retention-days: 30

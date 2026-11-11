@@ -1,0 +1,10 @@
+.pio/
+.vscode/
+src/config.h
+esphome/secrets.yaml
+esphome/.esphome/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
