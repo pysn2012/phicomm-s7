@@ -165,34 +165,6 @@ cards:
                       {% else %}
                       当前没有有效的待确认记录。
                       {% endif %}
-                  - type: conditional
-                    conditions:
-                      - entity: input_boolean.s7_member4_creation_open
-                        state: "on"
-                    card:
-                      type: vertical-stack
-                      cards:
-                        - type: entities
-                          title: 新建成员资料
-                          show_header_toggle: false
-                          entities:
-                            - entity: input_text.s7_member4_name
-                              name: 姓名
-                            - entity: input_text.s7_member4_birthdate
-                              name: 出生日期（YYYY-MM-DD，直接输入年份）
-                            - entity: input_number.s7_member4_height
-                              name: 身高（cm）
-                            - entity: input_select.s7_member4_sex
-                              name: 性别
-                        - type: custom:mushroom-template-card
-                          primary: 创建成员并归档
-                          secondary: 保存资料并将当前测量记录归入该成员
-                          icon: mdi:account-plus
-                          icon_color: teal
-                          layout: horizontal
-                          tap_action:
-                            action: perform-action
-                            perform_action: script.s7_member4_create_and_archive
                   - type: horizontal-stack
                     cards:
                       - type: custom:mushroom-template-card
@@ -229,14 +201,16 @@ cards:
                           data:
                             member_id: 3
                       - type: custom:mushroom-template-card
-                        primary: "{{ states('input_text.s7_member4_name') if is_state('input_boolean.s7_member4_created', 'on') and states('input_text.s7_member4_name') not in ['', 'unknown', 'unavailable'] else '创建成员' }}"
-                        icon: mdi:account-plus
+                        primary: "{{ states('input_text.s7_member4_name') if states('input_text.s7_member4_name') not in ['', 'unknown', 'unavailable'] else '成员4' }}"
+                        icon: mdi:account-check
                         icon_color: teal
                         layout: vertical
                         fill_container: true
                         tap_action:
                           action: perform-action
-                          perform_action: script.s7_member4_pending_action
+                          perform_action: script.s7_confirm_selected_pending
+                          data:
+                            member_id: 4
                       - type: custom:mushroom-template-card
                         primary: 舍弃
                         icon: mdi:delete
@@ -403,56 +377,51 @@ cards:
           - entity: sensor.s7_member_3_bone_mass
             name: 骨量
 
-  - type: conditional
-    conditions:
-      - entity: input_boolean.s7_member4_created
-        state: "on"
-    card:
-      type: custom:stack-in-card
-      mode: vertical
-      cards:
-        - type: custom:mushroom-template-card
-          primary: "{{ states('input_text.s7_member4_name') }}"
-          secondary: "年龄 {{ states('input_number.s7_member4_age') }} 岁 · 身高 {{ states('input_number.s7_member4_height') }} cm"
-          icon: mdi:account
-          icon_color: teal
-          tap_action:
-            action: perform-action
-            perform_action: script.s7_toggle_member_profile
-            data:
-              member_id: 4
-        - type: conditional
-          conditions:
-            - entity: input_select.s7_profile_editing
-              state: "4"
-          card:
-            type: entities
-            title: 编辑成员资料
-            show_header_toggle: false
-            entities:
-              - entity: input_text.s7_member4_name
-                name: 姓名
-              - entity: input_text.s7_member4_birthdate
-                name: 出生日期（YYYY-MM-DD）
-              - entity: input_number.s7_member4_height
-                name: 身高（cm）
-              - entity: input_select.s7_member4_sex
-                name: 性别
-        - type: entities
+  - type: custom:stack-in-card
+    mode: vertical
+    cards:
+      - type: custom:mushroom-template-card
+        primary: "{{ states('input_text.s7_member4_name') if states('input_text.s7_member4_name') not in ['', 'unknown', 'unavailable'] else '家庭成员 4' }}"
+        secondary: "年龄 {{ states('input_number.s7_member4_age') }} 岁 · 身高 {{ states('input_number.s7_member4_height') }} cm"
+        icon: mdi:account
+        icon_color: teal
+        tap_action:
+          action: perform-action
+          perform_action: script.s7_toggle_member_profile
+          data:
+            member_id: 4
+      - type: conditional
+        conditions:
+          - entity: input_select.s7_profile_editing
+            state: "4"
+        card:
+          type: entities
+          title: 编辑成员资料
           show_header_toggle: false
           entities:
-            - entity: sensor.s7_member_4_weight
-              name: 体重
-            - entity: sensor.s7_member_4_bmi
-              name: BMI
-            - entity: sensor.s7_member_4_body_fat
-              name: 体脂率
-            - entity: sensor.s7_member_4_water
-              name: 水分率
-            - entity: sensor.s7_member_4_muscle
-              name: 肌肉率
-            - entity: sensor.s7_member_4_bmr
-              name: 基础代谢
-            - entity: sensor.s7_member_4_bone_mass
-              name: 骨量
+            - entity: input_text.s7_member4_name
+              name: 姓名
+            - entity: input_text.s7_member4_birthdate
+              name: 出生日期（YYYY-MM-DD）
+            - entity: input_number.s7_member4_height
+              name: 身高（cm）
+            - entity: input_select.s7_member4_sex
+              name: 性别
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - entity: sensor.s7_member_4_weight
+            name: 体重
+          - entity: sensor.s7_member_4_bmi
+            name: BMI
+          - entity: sensor.s7_member_4_body_fat
+            name: 体脂率
+          - entity: sensor.s7_member_4_water
+            name: 水分率
+          - entity: sensor.s7_member_4_muscle
+            name: 肌肉率
+          - entity: sensor.s7_member_4_bmr
+            name: 基础代谢
+          - entity: sensor.s7_member_4_bone_mass
+            name: 骨量
 

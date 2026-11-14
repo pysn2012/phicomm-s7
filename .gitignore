@@ -6,5 +6,6 @@ esphome/.esphome/
 *.swp
 *.swo
 *~
+*.bak
 .DS_Store
 Thumbs.db

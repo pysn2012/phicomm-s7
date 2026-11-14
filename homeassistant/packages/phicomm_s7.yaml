@@ -22,7 +22,7 @@ input_select:
     options: [Male, Female]
   s7_member4_sex:
     name: S7 Member 4 Sex
-    options: [Select, Male, Female]
+    options: [Male, Female]
   s7_pending_selected:
     name: S7 Selected Pending Slot
     options: [Closed, "1", "2", "3", "4", "5"]
@@ -42,6 +42,7 @@ input_boolean:
   s7_member4_created:
     name: S7 Member 4 Profile Created
     icon: mdi:account-check
+    initial: true
 
 input_number:
   s7_member1_age:
@@ -92,9 +93,8 @@ input_number:
     mode: box
   s7_member4_height:
     name: S7 Member 4 Height
-    min: 0
+    min: 100
     max: 230
-    initial: 0
     step: 1
     unit_of_measurement: cm
     mode: box
@@ -273,6 +273,32 @@ script:
               - action: esphome.phicomm_s7_set_active_member
                 data:
                   member_id: 3
+          - conditions:
+              - condition: state
+                entity_id: input_select.s7_active_person
+                state: Member 4
+            sequence:
+              - action: number.set_value
+                target:
+                  entity_id: number.phicomm_s7_age
+                data:
+                  value: "{{ states('input_number.s7_member4_age') | float(30) }}"
+              - action: number.set_value
+                target:
+                  entity_id: number.phicomm_s7_height
+                data:
+                  value: "{{ states('input_number.s7_member4_height') | float(170) }}"
+              - action: select.select_option
+                target:
+                  entity_id: select.phicomm_s7_sex
+                data:
+                  option: "{{ '男' if states('input_select.s7_member4_sex') == 'Male' else '女' }}"
+              # The firmware only accepts member ids 0-3; id 4 is stored as 0
+              # (unassigned) on the device. The profile values above are what
+              # matter, and the record is assigned to Member 4 when archived.
+              - action: esphome.phicomm_s7_set_active_member
+                data:
+                  member_id: 4
         default:
           - action: esphome.phicomm_s7_clear_active_member
 
@@ -286,7 +312,7 @@ script:
     sequence:
       - condition: template
         value_template: >-
-          {{ member_name in ['Member 1', 'Member 2', 'Member 3']
+          {{ member_name in ['Member 1', 'Member 2', 'Member 3', 'Member 4']
              and states('input_select.s7_measurement_status') in ['Idle', 'Error'] }}
       - action: input_select.select_option
         target:
@@ -358,6 +384,14 @@ script:
       - action: script.s7_prepare_measurement
         data:
           member_name: Member 3
+
+  s7_measure_member4:
+    alias: S7 Measure Member 4
+    mode: single
+    sequence:
+      - action: script.s7_prepare_measurement
+        data:
+          member_name: Member 4
 
   s7_cancel_measurement:
     alias: S7 Cancel Waiting Measurement
@@ -658,6 +692,19 @@ script:
           entity_id: input_boolean.s7_pending_expanded
 
 automation:
+  # Member 4 is now a preset member (created on install), so keep the
+  # legacy "created" flag permanently on so all dashboard cards show.
+  - id: s7_member4_preset_flag
+    alias: S7 Keep Member 4 Preset Flag On
+    mode: single
+    triggers:
+      - trigger: homeassistant
+        event: start
+    actions:
+      - action: input_boolean.turn_on
+        target:
+          entity_id: input_boolean.s7_member4_created
+
   - id: s7_birthdate_text_migration
     alias: S7 Migrate Existing Birth Dates To Text Fields
     mode: single
@@ -736,6 +783,9 @@ automation:
           - input_number.s7_member3_age
           - input_number.s7_member3_height
           - input_select.s7_member3_sex
+          - input_number.s7_member4_age
+          - input_number.s7_member4_height
+          - input_select.s7_member4_sex
     conditions:
       - condition: state
         entity_id: input_select.s7_measurement_status
