@@ -31,13 +31,11 @@ jobs:
       # 关键步骤：动态生成 secrets.yaml（必须放在 esphome/ 目录，和 phicomm-s7.yaml 同级）
       # 需要在仓库 Settings -> Secrets and variables -> Actions 里添加：
       #   WIFI_SSID / WIFI_PASSWORD
-      #   FALLBACK_AP_PASSWORD（可选，不配置时默认使用 "S7-Fallback"）
       - name: Generate secrets.yaml
         run: |
           cat > esphome/secrets.yaml <<EOF
           wifi_ssid: "${{ secrets.WIFI_SSID }}"
           wifi_password: "${{ secrets.WIFI_PASSWORD }}"
-          fallback_ap_password: "${{ secrets.FALLBACK_AP_PASSWORD || 'S7-Fallback' }}"
           EOF
 
       # 步骤4：编译固件（external_components 用相对路径，必须让 esphome 找到 esphome/components）

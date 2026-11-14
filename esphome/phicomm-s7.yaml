@@ -35,8 +35,7 @@ wifi:
   power_save_mode: none
   reboot_timeout: 0s
   ap:
-    ssid: "S7-Fallback"
-    password: !secret fallback_ap_password
+    ssid: "S7-Fallback"  # 无密码开放热点，仅 WiFi 连不上时出现，连上后访问 192.168.4.1 重新配网
     # 配网窗口：WiFi 组件默认 ap_timeout 只有 1min，热点 1 分钟后就关，
     # 用户来不及填账号密码（表现为"首次连接 WiFi 出不来"）。放宽到 15 分钟。
     ap_timeout: 15min
