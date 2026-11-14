@@ -2,16 +2,11 @@
 
 基于 ESPHome 的斐讯 S7 体脂秤替代固件。
 
-## 与 Arduino 固件的区别
-
-| | Arduino (master 分支) | ESPHome (本分支) |
-|--|---|---|
-| HA 集成 | MQTT Discovery | 原生 API，更快更稳 |
-| WiFi/OTA | 手写代码 | ESPHome 内置 |
-| Web UI | 自定义 HTML | ESPHome web_server |
-| 配网 | 手动 AP 模式 | Captive Portal |
-| 配置方式 | 改代码重编译 | 改 YAML |
-| 自定义硬件 | 直接写 | external_components |
+- HA 集成：ESPHome Native API 直连（不用 MQTT）
+- WiFi/OTA：ESPHome 内置
+- 配网：Captive Portal（无密码热点 `S7-Fallback`）
+- 配置方式：改 YAML
+- 自定义硬件：external_components（`components/` 下的 `s7_mcu` 与 `cs1258`）
 
 ## 前置条件
 
@@ -20,12 +15,11 @@
 
 ## 安装
 
-1. 复制 `secrets.yaml.example` 为 `secrets.yaml`，填入你的 WiFi 和 API 密钥：
+1. 复制 `secrets.yaml.example` 为 `secrets.yaml`，填入你的 WiFi：
 
    ```yaml
    wifi_ssid: "你的WiFi名"
    wifi_password: "你的WiFi密码"
-   api_key: "生成一个随机base64密钥"
    ```
 
 2. 编译并刷入：

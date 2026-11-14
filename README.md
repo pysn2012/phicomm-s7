@@ -2,12 +2,7 @@
 
 斐讯 S7 体脂秤 ESP8266（CSM64F02）替代固件。斐讯云服务已关闭，此固件让你的 S7 体脂秤重获新生，原生接入 Home Assistant。
 
-仓库提供两套方案：
-
-| 方案 | 接入方式 | 状态 |
-|------|----------|------|
-| **ESPHome 方案（推荐）** | ESPHome Native API 直连 HA，多成员测量 + 待确认归档 | 当前主线，持续维护 |
-| 原有 PlatformIO / Arduino 固件 | MQTT Discovery | 遗留保留，见文末 |
+固件基于 ESPHome，通过 **Native API** 直连 Home Assistant，支持多成员测量与待确认归档，不依赖 MQTT。
 
 ## ESPHome 方案
 
@@ -27,7 +22,7 @@
 - **待确认归档队列** — 测量记录先进 5 槽队列，面板按体重相似度给出归属建议，确认后归入成员，未确认可舍弃；配合设备端 ACK 机制保证记录不丢失
 - **HA 侧参数配置** — 年龄、身高、性别在 HA 面板中直接修改，自动同步到秤
 - **加热器控制** — GPIO13 脚垫加热，HA 开关实体（带超时保护）
-- **中文 Web UI** — 秤机网页配置（WiFi / MQTT / 用户资料 / 高级调试，折叠显示）
+- **中文 Web UI** — 秤机网页配置（WiFi / 用户资料 / 高级调试，折叠显示）
 - **OTA 升级** — ESPHome OTA
 
 > 说明：设备端 `set_active_member` 只接受成员号 0–3，第 4 名成员的档案同样会同步到秤，测量记录归属由 HA 归档时指定，功能上与其他成员一致。
@@ -143,23 +138,6 @@ A: MCU 在无操作约 30 秒后进入休眠，踩上秤即可唤醒。
 
 **Q: 加热器不工作？**
 A: 在 Web UI 中将加热器 GPIO 设为 `13`。默认公版固件加热器是禁用的 (`-1`)。
-
-## 遗留方案：PlatformIO / Arduino 固件（MQTT）
-
-原 Arduino 固件（`src/`、`platformio.ini`、`release/`）仍保留，通过 MQTT Discovery 接入 HA：
-
-- 编译刷入：
-
-  ```bash
-  git clone https://github.com/Praepes/phicomm-s7-ha.git
-  cd phicomm-s7-ha
-  pio run -e s7_esp8266_1m          # 编译
-  pio run -e s7_esp8266_1m -t upload # 串口刷入
-  ```
-
-- HA 需配置 [MQTT 集成](https://www.home-assistant.io/integrations/mqtt/)，秤连接后自动 Discovery 以下实体：体重 / BMI / 体脂率 / 水分率 / 阻抗 / 去脂体重 / 基础代谢 / 肌肉率 / 骨量 / WiFi RSSI / MCU 在线 / CS1258 / 加热器开关 / 测量阻抗按钮 / 年龄 / 身高 / 性别
-- MQTT Topic：`s7/phicomm_s7/state`（状态 JSON）、`s7/phicomm_s7/availability`、`s7/phicomm_s7/cmd/{impedance,heater,age,height,sex}`
-- OTA：编辑 `platformio.ini` 的 `upload_port` 后 `pio run -e s7_esp8266_1m_ota -t upload`，或访问 `http://<秤IP>/update`
 
 ## 原项目与致谢
 

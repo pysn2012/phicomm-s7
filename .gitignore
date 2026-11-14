@@ -1,6 +1,4 @@
-.pio/
 .vscode/
-src/config.h
 esphome/secrets.yaml
 esphome/.esphome/
 *.swp
